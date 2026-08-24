@@ -61,7 +61,7 @@ function showError(m){errorBox.textContent=m;errorBox.style.display="block"}func
 function parseAIResponse(content){let text=String(content||"").trim().replace(/^```[\w-]*\n?/,"").replace(/\n?```$/,"");const e=text.match(/【ENGLISH】([\s\S]*?)(?=【CHINESE】|$)/i),c=text.match(/【CHINESE】([\s\S]*)/i);if(!e&&!c)return{english:text||"[沒有辨識到英文內容]",chinese:"AI 未依照指定格式回傳，請查看左側結果。"};return{english:e?e[1].trim():"[沒有辨識到英文內容]",chinese:c?c[1].trim():"[沒有翻譯內容]"}}
 function friendlyError(err){const m=err?.message||String(err);if(m.includes("Failed to fetch"))return"無法連線至 API。可能是網路、CORS 或 API Endpoint 問題。\n\n"+m;if(m.includes("401"))return"API Key 驗證失敗，請確認 API Key 是否正確或已失效。";if(m.includes("403"))return"沒有權限使用此 API 或模型。";if(m.includes("404"))return"找不到 API Endpoint 或指定模型，請更換模型測試。";if(m.includes("429"))return"API 請求過多或額度不足，請稍後再試。";return m}
 
-analyzeBtn.onclick=async()=>{hideError();results.style.display="none";const apiKey=apiKeyInput.value.trim(),model=modelSelect.value;if(!apiKey){showError("請先輸入 Zeabur AI Hub API Key。");apiKeyInput.focus();return}if(!selectedFile){showError("請先上傳一張圖片。");return}setLoading(true);try{loadingText.textContent="正在讀取圖片...";const image=await fileToBase64(selectedFile);loadingText.textContent="AI 正在分析與翻譯...";
+analyzeBtn.onclick=async()=>{hideError();results.style.display="none";englishResult.textContent="";chineseResult.textContent="";const apiKey=apiKeyInput.value.trim(),model=modelSelect.value;if(!apiKey){showError("請先輸入 Zeabur AI Hub API Key。");apiKeyInput.focus();return}if(!selectedFile){showError("請先上傳一張圖片。");return}setLoading(true);try{loadingText.textContent="正在讀取圖片...";const image=await fileToBase64(selectedFile);loadingText.textContent="AI 正在分析與翻譯...";
 const prompt=`You are a professional OCR and translation assistant. Carefully inspect the uploaded image.
 1. Extract ALL visible English text accurately.
 2. Preserve headings, paragraphs, lists, line breaks, and reading order as much as possible.
@@ -73,12 +73,18 @@ Return EXACTLY this format:
 full extracted English text
 【CHINESE】
 完整繁體中文翻譯`;
-const body={model,messages:[{role:"user",content:[{type:"text",text:prompt},{type:"image_url",image_url:{url:image}}]}],temperature:.2,max_tokens:8000};
+const body={model,messages:[{role:"user",content:[{type:"text",text:prompt},{type:"image_url",image_url:{url:image}}]}],temperature:.2,max_tokens:8000,stream:true};
 const response=await fetch(API_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},body:JSON.stringify(body)});
-let data;try{data=await response.json()}catch{throw new Error("API 回傳格式無法解析。HTTP Status: "+response.status)}
-if(!response.ok)throw new Error("HTTP "+response.status+"\n\n"+(data?.error?.message||data?.message||"API 呼叫失敗。"));
-const content=data?.choices?.[0]?.message?.content;if(!content)throw new Error("API 沒有回傳分析內容。請確認模型是否支援 Vision 圖片分析。");
-const parsed=parseAIResponse(content);englishResult.textContent=parsed.english;chineseResult.textContent=parsed.chinese;results.style.display="block";setTimeout(()=>results.scrollIntoView({behavior:"smooth",block:"start"}),100)
+if(!response.ok){let data;try{data=await response.json()}catch{}throw new Error("HTTP "+response.status+"\n\n"+(data?.error?.message||data?.message||"API 呼叫失敗。"))}
+if(!response.body)throw new Error("此瀏覽器不支援串流讀取，請改用其他瀏覽器。");
+const reader=response.body.getReader(),decoder=new TextDecoder();let buffer="",fullText="",firstChunk=true;
+while(true){const{done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});const lines=buffer.split("\n");buffer=lines.pop();
+for(const line of lines){const t=line.trim();if(!t||!t.startsWith("data:"))continue;const payload=t.slice(5).trim();if(payload==="[DONE]")continue;
+let json;try{json=JSON.parse(payload)}catch{continue}
+const delta=json?.choices?.[0]?.delta?.content||json?.choices?.[0]?.message?.content||"";
+if(delta){fullText+=delta;if(firstChunk){results.style.display="block";setTimeout(()=>results.scrollIntoView({behavior:"smooth",block:"start"}),100);firstChunk=false}
+const parsed=parseAIResponse(fullText);englishResult.textContent=parsed.english;chineseResult.textContent=parsed.chinese}}}
+if(!fullText)throw new Error("API 沒有回傳分析內容。請確認模型是否支援 Vision 圖片分析與串流（stream）。")
 }catch(e){console.error(e);showError(friendlyError(e))}finally{setLoading(false)}};
 
 document.querySelectorAll(".copy-btn").forEach(btn=>btn.onclick=async()=>{const text=$(btn.dataset.target).textContent;if(!text)return;try{await navigator.clipboard.writeText(text)}catch{const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()}const old=btn.textContent;btn.textContent="✓ 已複製";setTimeout(()=>btn.textContent=old,1200)});
