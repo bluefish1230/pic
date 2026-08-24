@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 圖片英文分析與中文翻譯</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;background:#f4f6f9;color:#1f2937}.container{max-width:1100px;margin:30px auto;padding:0 20px 50px}.header{text-align:center;margin-bottom:25px}.header h1{margin:0;font-size:30px}.header p{margin-top:10px;color:#6b7280}.card{background:#fff;border-radius:16px;padding:25px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,.06)}.card-title{font-size:20px;font-weight:bold;margin-bottom:20px}.form-grid,.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.form-group{margin-bottom:15px}label{display:block;font-weight:bold;margin-bottom:8px}input[type=password],input[type=text],select{width:100%;height:46px;padding:0 14px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;outline:0;background:#fff}input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}.api-wrapper{position:relative}.toggle-password{position:absolute;right:10px;top:7px;height:32px;border:0;background:#f3f4f6;border-radius:7px;padding:0 12px;cursor:pointer}.checkbox-area{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:#4b5563}.checkbox-area input{width:16px;height:16px}.drop-zone{border:2px dashed #9ca3af;border-radius:15px;min-height:260px;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;transition:.2s;text-align:center;padding:20px;background:#fafafa}.drop-zone:hover,.drop-zone.dragover{border-color:#2563eb;background:#eff6ff}.upload-icon{font-size:55px;margin-bottom:10px}.upload-text{font-size:19px;font-weight:bold}.upload-hint{margin-top:8px;font-size:14px;color:#6b7280}#fileInput{display:none}.preview-wrapper{display:none;text-align:center;margin-top:20px}#previewImage{max-width:100%;max-height:500px;border-radius:12px;border:1px solid #e5e7eb}.file-name{margin-top:10px;color:#6b7280;font-size:14px;word-break:break-all}.action-area{text-align:center;margin-top:25px}.analyze-btn{border:0;background:#2563eb;color:#fff;padding:14px 50px;border-radius:10px;font-size:17px;font-weight:bold;cursor:pointer}.analyze-btn:hover{background:#1d4ed8}.analyze-btn:disabled{background:#9ca3af;cursor:not-allowed}.loading{display:none;margin-top:20px;text-align:center}.spinner{width:35px;height:35px;border:4px solid #e5e7eb;border-top:4px solid #2563eb;border-radius:50%;animation:spin 1s linear infinite;margin:auto}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{margin-top:10px;color:#6b7280}.error-box{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:15px;border-radius:10px;margin-top:20px;white-space:pre-wrap;word-break:break-word}.results{display:none}.result-box{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff}.result-header{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-weight:bold}.copy-btn{border:0;background:#e5e7eb;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:13px}.copy-btn:hover{background:#d1d5db}.result-content{padding:18px;min-height:280px;white-space:pre-wrap;line-height:1.7;word-break:break-word}.english-header{color:#1d4ed8}.chinese-header{color:#dc2626}.footer-note{margin-top:15px;color:#9ca3af;font-size:13px;text-align:center}@media(max-width:768px){.container{margin-top:15px;padding:0 12px 30px}.card{padding:18px}.form-grid,.result-grid{grid-template-columns:1fr}.header h1{font-size:24px}.drop-zone{min-height:220px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><h1>🖼️ AI 圖片英文分析與中文翻譯</h1><p>上傳圖片，使用 AI 自動辨識英文並翻譯成繁體中文</p></div>
+
+<div class="card"><div class="card-title">⚙️ AI API 設定</div>
+<div class="form-grid">
+<div class="form-group"><label for="apiKey">Zeabur AI Hub API Key</label><div class="api-wrapper"><input type="password" id="apiKey" placeholder="請輸入 sk- 開頭的 API Key" autocomplete="off"><button type="button" class="toggle-password" id="togglePassword">顯示</button></div><div class="checkbox-area"><input type="checkbox" id="rememberKey"><label for="rememberKey" style="margin:0;font-weight:normal;cursor:pointer;">記住 API Key（儲存在此瀏覽器）</label></div></div>
+<div class="form-group"><label for="model">AI 模型</label><select id="model">
+<optgroup label="⭐ Gemini"><option value="gemini-3.6-flash">⭐ Gemini 3.6 Flash</option><option value="gemini-3.5-flash">Gemini 3.5 Flash</option><option value="gemini-2.5-flash">Gemini 2.5 Flash</option><option value="gemini-2.5-pro">Gemini 2.5 Pro</option></optgroup>
+<optgroup label="OpenAI"><option value="gpt-5.6">GPT-5.6</option><option value="gpt-5">GPT-5</option><option value="gpt-5-mini">GPT-5 mini</option><option value="gpt-4.1">GPT-4.1</option><option value="gpt-4o">GPT-4o</option><option value="gpt-4o-mini">GPT-4o mini</option></optgroup>
+<optgroup label="Anthropic Claude"><option value="claude-opus-4.8">Claude Opus 4.8</option><option value="claude-sonnet-4.6">Claude Sonnet 4.6</option><option value="claude-haiku-4.5">Claude Haiku 4.5</option></optgroup>
+<optgroup label="其他"><option value="glm-4.7">GLM-4.7</option><option value="glm-4.7-flash">GLM-4.7 Flash</option><option value="kimi-k3">Kimi K3</option></optgroup>
+</select></div></div></div>
+
+<div class="card"><div class="card-title">📤 上傳圖片</div>
+<div class="drop-zone" id="dropZone"><div class="upload-icon">🖼️</div><div class="upload-text">拖曳圖片到這裡</div><div class="upload-hint">或點擊這裡選擇圖片<br>支援 JPG、PNG、WEBP</div></div>
+<input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+<div class="preview-wrapper" id="previewWrapper"><img id="previewImage" alt="圖片預覽"><div class="file-name" id="fileName"></div></div>
+<div class="action-area"><button class="analyze-btn" id="analyzeBtn">🔍 開始分析與翻譯</button></div>
+<div class="loading" id="loading"><div class="spinner"></div><div class="loading-text" id="loadingText">AI 正在分析圖片...</div></div>
+<div class="error-box" id="errorBox"></div></div>
+
+<div class="card results" id="results"><div class="card-title">✨ AI 分析結果</div><div class="result-grid">
+<div class="result-box"><div class="result-header"><span class="english-header">🇬🇧 英文原文</span><button class="copy-btn" data-target="englishResult">📋 複製</button></div><div class="result-content" id="englishResult"></div></div>
+<div class="result-box"><div class="result-header"><span class="chinese-header">🇹🇼 繁體中文翻譯</span><button class="copy-btn" data-target="chineseResult">📋 複製</button></div><div class="result-content" id="chineseResult"></div></div>
+</div></div>
+<div class="footer-note">API Key 由你的瀏覽器直接送至 Zeabur AI Hub；公開 GitHub 時請不要把 API Key 寫進程式碼。</div>
+</div>
+
+<script>
+const API_ENDPOINT="https://hnd1.aihub.zeabur.ai/v1/chat/completions";
+const $=id=>document.getElementById(id);
+const apiKeyInput=$("apiKey"),rememberKey=$("rememberKey"),modelSelect=$("model"),fileInput=$("fileInput"),dropZone=$("dropZone"),previewWrapper=$("previewWrapper"),previewImage=$("previewImage"),fileName=$("fileName"),analyzeBtn=$("analyzeBtn"),loading=$("loading"),loadingText=$("loadingText"),errorBox=$("errorBox"),results=$("results"),englishResult=$("englishResult"),chineseResult=$("chineseResult"),togglePassword=$("togglePassword");
+let selectedFile=null;
+
+addEventListener("DOMContentLoaded",()=>{const k=localStorage.getItem("zeabur_aihub_api_key"),m=localStorage.getItem("zeabur_aihub_model");if(k){apiKeyInput.value=k;rememberKey.checked=true}if(m&&[...modelSelect.options].some(o=>o.value===m))modelSelect.value=m});
+togglePassword.onclick=()=>{const show=apiKeyInput.type==="password";apiKeyInput.type=show?"text":"password";togglePassword.textContent=show?"隱藏":"顯示"};
+rememberKey.onchange=()=>{if(rememberKey.checked){const k=apiKeyInput.value.trim();if(k)localStorage.setItem("zeabur_aihub_api_key",k)}else localStorage.removeItem("zeabur_aihub_api_key")};
+apiKeyInput.oninput=()=>{if(rememberKey.checked)localStorage.setItem("zeabur_aihub_api_key",apiKeyInput.value.trim())};
+modelSelect.onchange=()=>localStorage.setItem("zeabur_aihub_model",modelSelect.value);
+dropZone.onclick=()=>fileInput.click();
+fileInput.onchange=()=>fileInput.files[0]&&handleFile(fileInput.files[0]);
+["dragover","dragleave","drop"].forEach(type=>dropZone.addEventListener(type,e=>{e.preventDefault();e.stopPropagation()}));
+dropZone.addEventListener("dragover",()=>dropZone.classList.add("dragover"));
+dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop",e=>{dropZone.classList.remove("dragover");if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+
+function handleFile(file){if(!["image/jpeg","image/png","image/webp"].includes(file.type))return showError("請上傳 JPG、PNG 或 WEBP 圖片。");if(file.size>15*1024*1024)return showError("圖片大小不可超過 15MB。");selectedFile=file;fileName.textContent=`${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;const r=new FileReader();r.onload=e=>{previewImage.src=e.target.result;previewWrapper.style.display="block"};r.readAsDataURL(file)}
+const fileToBase64=file=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error("圖片讀取失敗。"));r.readAsDataURL(file)});
+function setLoading(on){loading.style.display=on?"block":"none";analyzeBtn.disabled=on;analyzeBtn.textContent=on?"⏳ AI 分析中...":"🔍 開始分析與翻譯"}
+function showError(m){errorBox.textContent=m;errorBox.style.display="block"}function hideError(){errorBox.style.display="none";errorBox.textContent=""}
+function parseAIResponse(content){let text=String(content||"").trim().replace(/^```[\w-]*\n?/,"").replace(/\n?```$/,"");const e=text.match(/【ENGLISH】([\s\S]*?)(?=【CHINESE】|$)/i),c=text.match(/【CHINESE】([\s\S]*)/i);if(!e&&!c)return{english:text||"[沒有辨識到英文內容]",chinese:"AI 未依照指定格式回傳，請查看左側結果。"};return{english:e?e[1].trim():"[沒有辨識到英文內容]",chinese:c?c[1].trim():"[沒有翻譯內容]"}}
+function friendlyError(err){const m=err?.message||String(err);if(m.includes("Failed to fetch"))return"無法連線至 API。可能是網路、CORS 或 API Endpoint 問題。\n\n"+m;if(m.includes("401"))return"API Key 驗證失敗，請確認 API Key 是否正確或已失效。";if(m.includes("403"))return"沒有權限使用此 API 或模型。";if(m.includes("404"))return"找不到 API Endpoint 或指定模型，請更換模型測試。";if(m.includes("429"))return"API 請求過多或額度不足，請稍後再試。";return m}
+
+analyzeBtn.onclick=async()=>{hideError();results.style.display="none";const apiKey=apiKeyInput.value.trim(),model=modelSelect.value;if(!apiKey){showError("請先輸入 Zeabur AI Hub API Key。");apiKeyInput.focus();return}if(!selectedFile){showError("請先上傳一張圖片。");return}setLoading(true);try{loadingText.textContent="正在讀取圖片...";const image=await fileToBase64(selectedFile);loadingText.textContent="AI 正在分析與翻譯...";
+const prompt=`You are a professional OCR and translation assistant. Carefully inspect the uploaded image.
+1. Extract ALL visible English text accurately.
+2. Preserve headings, paragraphs, lists, line breaks, and reading order as much as possible.
+3. Do not invent text. Use [Unreadable] for text that cannot be read.
+4. Translate the extracted English into natural Traditional Chinese.
+5. Do not add explanations or commentary.
+Return EXACTLY this format:
+【ENGLISH】
+full extracted English text
+【CHINESE】
+完整繁體中文翻譯`;
+const body={model,messages:[{role:"user",content:[{type:"text",text:prompt},{type:"image_url",image_url:{url:image}}]}],temperature:.2,max_tokens:8000};
+const response=await fetch(API_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},body:JSON.stringify(body)});
+let data;try{data=await response.json()}catch{throw new Error("API 回傳格式無法解析。HTTP Status: "+response.status)}
+if(!response.ok)throw new Error("HTTP "+response.status+"\n\n"+(data?.error?.message||data?.message||"API 呼叫失敗。"));
+const content=data?.choices?.[0]?.message?.content;if(!content)throw new Error("API 沒有回傳分析內容。請確認模型是否支援 Vision 圖片分析。");
+const parsed=parseAIResponse(content);englishResult.textContent=parsed.english;chineseResult.textContent=parsed.chinese;results.style.display="block";setTimeout(()=>results.scrollIntoView({behavior:"smooth",block:"start"}),100)
+}catch(e){console.error(e);showError(friendlyError(e))}finally{setLoading(false)}};
+
+document.querySelectorAll(".copy-btn").forEach(btn=>btn.onclick=async()=>{const text=$(btn.dataset.target).textContent;if(!text)return;try{await navigator.clipboard.writeText(text)}catch{const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()}const old=btn.textContent;btn.textContent="✓ 已複製";setTimeout(()=>btn.textContent=old,1200)});
+</script>
+</body>
+</html>
